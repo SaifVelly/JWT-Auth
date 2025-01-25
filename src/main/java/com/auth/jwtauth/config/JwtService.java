@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -28,8 +29,15 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    // Method that generates a token
 
+    // to generate a token without any extra claim
+    public String generateToken(UserDetails userDetails){
+        return generateToken(new HashMap<>(), userDetails);
+    }
+
+
+
+    // Method that generates a token
     public String generateToken(
             Map<String, Object> extraClaims, // this is for if i want to pass any information that i want to store within my token
             UserDetails userDetails
@@ -53,6 +61,23 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // checking if a token is valid or not 
+    public boolean isTokenValid(String token, UserDetails userDetails){
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    //checking if the token is expired
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+
+    //selecting the expiration date from the token
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     private Key getSignInKey() {
