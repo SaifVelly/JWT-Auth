@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,6 +20,10 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
 
     // to be implemented later
     private final JwtService jwtService;
+
+    // UserDetailsService is already available in spring security
+    private final UserDetailsService userDetailsService;
+    // i will provide a bean of type userDetailsService because i want y own implementation
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -33,6 +40,10 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
         // 7 because the Bearer + " " contains 7 characters
         jwt = authHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt) ;
+        //checking if the user is not connected yet
+        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication()==null){
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+        }
 
     }
 }
